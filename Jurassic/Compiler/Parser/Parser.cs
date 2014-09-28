@@ -471,6 +471,14 @@ namespace Jurassic.Compiler
                 declaration.VariableName = this.ExpectIdentifier();
                 ValidateVariableName(declaration.VariableName);
 
+                object globalInstance = null;
+                if (this.currentScope is ObjectScope && ((ObjectScope)this.currentScope).ScopeObject != null)
+                {
+                    object cacheKey;
+                    int cacheIndex;
+                    globalInstance = ((ObjectScope)this.currentScope).ScopeObject.InlineGetPropertyValue(declaration.VariableName, out cacheIndex, out cacheKey);
+                }
+
                 // Add the variable to the current function's list of local variables.
                 this.currentScope.DeclareVariable(declaration.VariableName,
                     this.context == CodeContext.Function ? null : new LiteralExpression(Undefined.Value),
@@ -487,6 +495,15 @@ namespace Jurassic.Compiler
 
                     // Record the portion of the source document that will be highlighted when debugging.
                     declaration.DebugInfo = new SourceCodeSpan(start, this.PositionBeforeWhitespace);
+                }
+                else if (this.nextToken == PunctuatorToken.Semicolon)
+                {
+                    if (globalInstance is ObjectInstance)
+                    {
+                        this.currentScope.RemovedDeclaredVariable(declaration.VariableName);
+                        if (this.AtValidEndOfStatement() == true && this.nextToken != PunctuatorToken.Comma)
+                            break;
+                    }
                 }
 
                 // Add the declaration to the result.

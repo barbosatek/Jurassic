@@ -193,6 +193,16 @@ namespace UnitTests
         }
 
         [Test]
+        public void VarRedaclaration()
+        {
+            TestUtils.Execute("var foo = {};");
+            TestUtils.Execute("foo.a = 5;");
+            TestUtils.Execute("var foo;");
+            TestUtils.Execute("var a = foo.a;");
+            Assert.AreEqual(5, TestUtils.Evaluate("a"));
+        }
+
+        [Test]
         public void Return()
         {
             Assert.AreEqual(5, TestUtils.Evaluate("function f() { return 5 } f()"));
